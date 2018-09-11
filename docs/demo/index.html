@@ -1,0 +1,142 @@
+<html>
+
+<head>
+  <title>Serverless Chat</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.1.3/dist/css/bootstrap.min.css">
+  <script>
+    window.apiBaseUrl = 'http://localhost:7071';
+  </script>
+  <style>
+    .slide-fade-enter-active, .slide-fade-leave-active {
+      transition: all 1s ease;
+    }
+    .slide-fade-enter, .slide-fade-leave-to {
+      height: 0px;
+      overflow-y: hidden;
+      opacity: 0;
+    }
+  </style>
+</head>
+
+<body>
+  <p>&nbsp;</p>
+  <div id="app" class="container">
+    <h3>Serverless chat</h3>
+    <div class="row" v-if="ready">
+      <div class="signalr-demo col-sm">
+        <hr />
+        <form v-on:submit.prevent="sendNewMessage">
+          <input type="text" v-model="newMessage" id="message-box" class="form-control" placeholder="Type message here..." />
+        </form>
+      </div>
+    </div>
+    <div class="row" v-if="!ready">
+      <div class="col-sm">
+        <div>Loading...</div>
+      </div>
+    </div>
+    <div v-if="ready">
+      <transition-group name="slide-fade" tag="div">
+        <div class="row" v-for="message in messages" v-bind:key="message.id">
+          <div class="col-sm">
+            <hr />
+            <div>
+              <div style="display: inline-block; padding-left: 12px;">
+                <div>
+                  <span class="text-info small"><strong>{{ message.sender }}</strong></span>
+                </div>
+                <div>
+                  {{ message.text }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </transition-group>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.5.17/dist/vue.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@aspnet/signalr@1.0.3/dist/browser/signalr.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios@0.18.0/dist/axios.min.js"></script>
+
+  <script>
+    const data = {
+      username: '',
+      newMessage: '',
+      messages: [],
+      ready: false
+    };
+
+    const app = new Vue({
+      el: '#app',
+      data: data,
+      methods: {
+        sendNewMessage: function () {
+          sendMessage(this.username, this.newMessage);
+          this.newMessage = '';
+        }
+      }
+    });
+
+    const apiBaseUrl = prompt('Enter the Azure Function app base URL', window.apiBaseUrl);
+
+    data.username = prompt("Enter your username");
+    if (!data.username) {
+      alert("No username entered. Reload page and try again.");
+      throw "No username entered";
+    }
+
+    getConnectionInfo().then(info => {
+      // make compatible with old and new SignalRConnectionInfo
+      info.accessToken = info.accessToken || info.accessKey;
+      info.url = info.url || info.endpoint;
+
+      data.ready = true;
+      const options = {
+        accessTokenFactory: () => info.accessToken
+      };
+
+      const connection = new signalR.HubConnectionBuilder()
+        .withUrl(info.url, options)
+        .configureLogging(signalR.LogLevel.Information)
+        .build();
+
+      connection.on('newMessage', newMessage);
+      connection.onclose(() => console.log('disconnected'));
+
+      console.log('connecting...');
+      connection.start()
+        .then(() => console.log('connected!'))
+        .catch(console.error);
+
+    }).catch(alert);
+
+    function getAxiosConfig() {
+      const config = {
+        headers: {}
+      };
+      return config;
+    }
+
+    function getConnectionInfo() {
+      return axios.post(`${apiBaseUrl}/api/negotiate`, null, getAxiosConfig())
+        .then(resp => resp.data);
+    }
+
+    function sendMessage(sender, messageText) {
+      return axios.post(`${apiBaseUrl}/api/messages`, {
+        sender: sender,
+        text: messageText
+      }, getAxiosConfig()).then(resp => resp.data);
+    }
+
+    let counter = 0;
+    function newMessage(message) {
+      message.id = counter++; // vue transitions need an id
+      data.messages.unshift(message);
+    }
+  </script>
+</body>
+
+</html>
