@@ -1,0 +1,12 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+      "AzureSignalRConnectionString": "",
+      "WEBSITE_NODE_DEFAULT_VERSION": "10.0.0",
+      "FUNCTIONS_WORKER_RUNTIME": "node"
+  },
+  "Host": {
+      "LocalHttpPort": 7071,
+      "CORS": "*"
+  }
+}
