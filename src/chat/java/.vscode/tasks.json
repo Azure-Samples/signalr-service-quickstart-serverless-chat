@@ -1,0 +1,20 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "runFunctionsHost",
+      "linux": {
+        "command": "sh -c \"mvn clean package -B && func host start --language-worker -- \\\"-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005\\\" --script-root \\\"target/azure-functions/chat-1548999412365/\\\"\""
+      },
+      "osx": {
+        "command": "sh -c \"mvn clean package -B && func host start --language-worker -- \\\"-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005\\\" --script-root \\\"target/azure-functions/chat-1548999412365/\\\"\""
+      },
+      "windows": {
+        "command": "powershell -command \"mvn clean package -B; func host start --language-worker -- \\\"-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005\\\" --script-root \\\"target/azure-functions/chat-1548999412365/\\\"\""
+      },
+      "type": "shell",
+      "isBackground": true,
+      "problemMatcher": "$func-watch"
+    }
+  ]
+}
