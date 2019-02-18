@@ -19,7 +19,7 @@ public class Functions {
 
     @FunctionName("messages")
     @SignalR(hubName = "chat")
-    public SignalRMessage newMessage(
+    public SignalRMessage sendMessage(
             @HttpTrigger(
                 name = "req", 
                 methods = { HttpMethod.POST },
