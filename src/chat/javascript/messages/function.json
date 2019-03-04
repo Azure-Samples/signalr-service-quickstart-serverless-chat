@@ -17,7 +17,7 @@
     },
     {
       "type": "signalR",
-      "name": "signalRMessages",
+      "name": "$return",
       "hubName": "chat",
       "direction": "out"
     }
