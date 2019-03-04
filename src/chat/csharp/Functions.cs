@@ -19,8 +19,8 @@ namespace FunctionApp
     {
         [FunctionName("negotiate")]
         public static SignalRConnectionInfo GetSignalRInfo(
-            [HttpTrigger(AuthorizationLevel.Anonymous)] HttpRequest req,
-            [SignalRConnectionInfo(HubName = "simplechat")] SignalRConnectionInfo connectionInfo)
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post")] HttpRequest req,
+            [SignalRConnectionInfo(HubName = "chat")] SignalRConnectionInfo connectionInfo)
         {
             return connectionInfo;
         }
@@ -28,7 +28,7 @@ namespace FunctionApp
         [FunctionName("messages")]
         public static Task SendMessage(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post")] object message,
-            [SignalR(HubName = "simplechat")] IAsyncCollector<SignalRMessage> signalRMessages)
+            [SignalR(HubName = "chat")] IAsyncCollector<SignalRMessage> signalRMessages)
         {
             return signalRMessages.AddAsync(
                 new SignalRMessage
