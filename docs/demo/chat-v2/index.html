@@ -97,7 +97,7 @@
 
     console.log('connecting...');
     connection.start()
-      .then(() => console.log('connected!'))
+      .then(() => data.ready = true)
       .catch(console.error);
 
     function sendMessage(sender, messageText) {
