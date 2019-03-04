@@ -74,81 +74,124 @@
   <script src="https://cdn.jsdelivr.net/npm/timeago.js@3.0.2/dist/timeago.min.js"></script>
 
   <script>
-    const axiosConfig = {
-      withCredentials: true
-    };
+    getAuthInfo();
     const hubName = 'chat';
+    
+    const data = {
+      authenticated: window.auth && window.auth.token,
+      isLocalhost: /\/\/localhost/.test(apiBaseUrl),
+      username: '',
+      newMessage: '',
+      messages: [],
+      ready: false
+    };
 
     const app = new Vue({
       el: '#app',
-      data: function () {
-        return {
-          authenticated: false,
-          isLocalhost: /\/\/localhost/.test(apiBaseUrl),
-          username: '',
-          newMessage: '',
-          messages: [],
-          ready: false,
-          loginUrl: `${apiBaseUrl}/.auth/login/${authProvider}?post_login_redirect_url=${encodeURIComponent(window.location.href)}`,
-          logoutUrl: `${apiBaseUrl}/.auth/logout?post_logout_redirect_uri=${encodeURIComponent(window.location.href)}`
-        };
-      },
-      mounted: function() {
-        return this.getAuthInfo().then(function () {
-          if (this.isLocalhost || this.authenticated) {
-            const connection = new signalR.HubConnectionBuilder()
-              .withUrl(`${apiBaseUrl}/api`)
-              .build();
-
-            connection.on('newMessage', onNewMessage.bind(this));
-            connection.onclose(() => console.log('disconnected'));
-
-            console.log('connecting...');
-            connection.start()
-              .then(() => this.ready = true)
-              .catch(console.error);
-          }
-
-          let counter = 0;
-          function onNewMessage(message) {
-            if (!message.sender) {
-              message.sender = "anonymous";
-            }
-            message.id = counter++; // vue transitions need an id
-            this.messages.unshift(message);
-          }
-        }.bind(this));
-      },
+      data: data,
       methods: {
         sendNewMessage: function () {
-          this.sendMessage(this.username, null, this.newMessage);
+          sendMessage(this.username, null, this.newMessage);
           this.newMessage = '';
         },
         login: function () {
-          window.location.href = this.loginUrl;
+          window.location.href = window.auth.loginUrl;
         },
-        logout: function () {
-          window.location.href = this.logoutUrl;
-        },
+        logout: window.auth.logout,
         sendPrivateMessage: function (recipient) {
           const messageText = prompt('Send private message to ' + recipient);
           if (messageText) {
-            this.sendMessage(this.username, recipient, messageText);
+            sendMessage(this.username, recipient, messageText);
           }
-        },
-        sendMessage: function(sender, recipient, messageText) {
-          return axios.post(`${apiBaseUrl}/api/messages`, {
-            recipient: recipient,
-            sender: sender,
-            text: messageText
-          }, axiosConfig).then(resp => resp.data);
-        },
-        getAuthInfo: function () {
-          return axios.post(`${apiBaseUrl}/.auth/me`, null, axiosConfig)
-            .then(() => this.authenticated = true, () => null);
         }
       }
     });
+
+    if (data.isLocalhost || data.authenticated) {
+      getConnectionInfo().then(info => {
+        // make compatible with old and new SignalRConnectionInfo
+        info.accessToken = info.accessToken || info.accessKey;
+        info.url = info.url || info.endpoint;
+
+        data.ready = true;
+        const options = {
+          accessTokenFactory: () => info.accessToken
+        };
+
+        const connection = new signalR.HubConnectionBuilder()
+          .withUrl(info.url, options)
+          .configureLogging(signalR.LogLevel.Information)
+          .build();
+
+        connection.on('newMessage', newMessage);
+        connection.onclose(() => console.log('disconnected'));
+
+        console.log('connecting...');
+        connection.start()
+          .then(() => console.log('connected!'))
+          .catch(console.error);
+
+      }).catch(alert);
+    }
+
+    function getAxiosConfig() {
+      const config = {
+        headers: {}
+      };
+      if (window.auth.token) {
+        config.headers['X-ZUMO-AUTH'] = window.auth.token;
+      }
+      return config;
+    }
+
+    function getConnectionInfo() {
+      return axios.post(`${apiBaseUrl}/api/SignalRInfo`, null, getAxiosConfig())
+        .then(resp => resp.data);
+    }
+
+    function sendMessage(sender, recipient, messageText) {
+      return axios.post(`${apiBaseUrl}/api/messages`, {
+        recipient: recipient,
+        sender: sender,
+        text: messageText
+      }, getAxiosConfig()).then(resp => resp.data);
+    }
+
+    let counter = 0;
+    function newMessage(message) {
+      if (!message.sender) {
+        message.sender = "anonymous";
+      }
+      message.id = counter++; // vue transitions need an id
+      data.messages.unshift(message);
+    }
+
+    function getAuthInfo() {
+      let authToken = "";
+
+      if (window.location.hash) {
+        const match = window.location.hash.match(/\btoken=([^&]+)/);
+        if (match && match[1]) {
+          authToken = JSON.parse(decodeURIComponent(match[1])).authenticationToken;
+          sessionStorage.setItem('authToken', authToken);
+          history.pushState("", document.title, window.location.pathname + window.location.search);
+        }
+      }
+      
+      if (!authToken) {
+        authToken = sessionStorage.getItem('authToken');
+      }
+
+      window.auth = {
+        token: authToken,
+        loginUrl: `${apiBaseUrl}/.auth/login/${authProvider}?session_mode=token&post_login_redirect_url=` +
+          encodeURIComponent(window.location.href),
+        logout: function() {
+          sessionStorage.removeItem('authToken');
+          window.location.reload();
+        }
+      };
+    }
   </script>
 </body>
 
