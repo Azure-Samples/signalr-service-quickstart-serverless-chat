@@ -9,7 +9,10 @@ import com.microsoft.azure.functions.*;
 public class Functions {
     @FunctionName("negotiate")
     public SignalRConnectionInfo negotiate(
-            @HttpTrigger(name = "req") HttpRequestMessage<Optional<String>> req,
+            @HttpTrigger(
+                name = "req",
+                methods = { HttpMethod.POST },
+                authLevel = AuthorizationLevel.ANONYMOUS) HttpRequestMessage<Optional<String>> req,
             @SignalRConnectionInfoInput(
                 name = "connectionInfo",
                 hubName = "chat") SignalRConnectionInfo connectionInfo) {
@@ -23,8 +26,7 @@ public class Functions {
             @HttpTrigger(
                 name = "req", 
                 methods = { HttpMethod.POST },
-                authLevel = AuthorizationLevel.ANONYMOUS) 
-                HttpRequestMessage<Object> req) {
+                authLevel = AuthorizationLevel.ANONYMOUS) HttpRequestMessage<Object> req) {
         
         Object message = req.getBody();
         return new SignalRMessage("newMessage", message);
