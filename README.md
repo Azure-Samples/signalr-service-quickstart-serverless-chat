@@ -1,7 +1,9 @@
 # Azure SignalR Service Quickstarts - Serverless Chat (Azure Functions)
 
-Quickstart source code
-
+Source code for these quickstarts:
+* [JavaScript](https://docs.microsoft.com/azure/azure-signalr/signalr-quickstart-azure-functions-javascript?WT.mc_id=signalrquickstart-github-antchu)
+* [C#](https://docs.microsoft.com/azure/azure-signalr/signalr-quickstart-azure-functions-csharp?WT.mc_id=signalrquickstart-github-antchu)
+* [Java](https://docs.microsoft.com/azure/azure-signalr/signalr-quickstart-azure-functions-java?WT.mc_id=signalrquickstart-github-antchu)
 
 ## Getting Started
 
