@@ -1,0 +1,6 @@
+{
+  "azureFunctions.projectRuntime": "~2",
+  "azureFunctions.projectLanguage": "PowerShell",
+  "azureFunctions.templateFilter": "All",
+  "debug.internalConsoleOptions": "neverOpen"
+}
