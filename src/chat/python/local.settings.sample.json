@@ -1,0 +1,12 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureSignalRConnectionString": "<signalr-connection-string>",
+    "FUNCTIONS_WORKER_RUNTIME": "python"
+  },
+  "Host": {
+    "LocalHttpPort": 7071,
+    "CORS": "http://localhost:8080,https://azure-samples.github.io",
+    "CORSCredentials": true
+  }
+}
