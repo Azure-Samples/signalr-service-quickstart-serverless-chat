@@ -7,5 +7,4 @@ def main(req: func.HttpRequest) -> str:
         'target': 'newMessage',
         'arguments': [ message ]
     })
-
-
+    
